@@ -941,7 +941,7 @@ async function sendMsg(){
     const histStr=convHistory.map(m=>m.role+': '+m.content).join('\n');
     const body={messages:[{role:'user',content:sysPrompt+'\n\nConversation so far:\n'+histStr+'\n\nRespond as The Curator:'}]};
     // ── BACKEND URL: replace with your Render URL after deploying ──
-    const BACKEND_URL = 'https://YOUR-RENDER-URL.onrender.com';
+    const BACKEND_URL = 'https://explorer-academy.onrender.com';
     const resp=await fetch(BACKEND_URL+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data=await resp.json();
     hideTyping();
