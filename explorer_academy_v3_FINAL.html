@@ -197,6 +197,10 @@ body{font-family:"DM Sans",sans-serif;background:var(--parchment);color:var(--in
 .sb2{width:38px;height:38px;border-radius:9px;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;}
 .sb2:hover{background:var(--gold-b);}
 .sb2:disabled{opacity:.4;cursor:not-allowed;}
+.micbtn{width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;flex-shrink:0;}
+.micbtn:hover{background:rgba(201,153,58,.2);border-color:var(--gold);}
+.micbtn.listening{background:rgba(160,82,45,.4);border-color:var(--rust);animation:micpulse 1s infinite;}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(160,82,45,.4)}50%{box-shadow:0 0 0 8px rgba(160,82,45,0)}}
 #pq .wrap{max-width:660px;}
 .qsh{background:var(--cream);border:1px solid var(--bdr);border-radius:var(--r);padding:28px;box-shadow:var(--shm);}
 .qeye{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;}
@@ -378,7 +382,8 @@ body{font-family:"DM Sans",sans-serif;background:var(--parchment);color:var(--in
         <div class="chdr"><div class="chtitle" id="ctitle">Loading...</div><div class="chst"><div class="chd"></div>Ready</div></div>
         <div class="msgs" id="msgs"></div>
         <div class="cinp">
-          <textarea class="ci" id="ci" placeholder="Type your answer... The Curator is listening." rows="1" onkeydown="hk(event)" oninput="ar(this)"></textarea>
+          <textarea class="ci" id="ci" placeholder="Type your answer or press 🎤 to speak..." rows="1" onkeydown="hk(event)" oninput="ar(this)"></textarea>
+          <button class="micbtn" id="micbtn" onclick="toggleMic()" title="Click to speak">🎤</button>
           <button class="sb2" id="sb2btn" onclick="sendMsg()">→</button>
         </div>
       </div>
@@ -799,6 +804,78 @@ function updStreak(){
 }
 
 function cp(id,btn){var el=g(id);if(!el)return;navigator.clipboard.writeText(el.textContent).then(function(){var o=btn.textContent;btn.textContent="✓";setTimeout(function(){btn.textContent=o;},2000);});}
+
+// ── VOICE INPUT ──────────────────────────────────────────
+var recognition = null;
+var isListening = false;
+
+function toggleMic(){
+  if(!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)){
+    alert("Voice input works in Chrome or Edge. Please use one of those browsers.");
+    return;
+  }
+  if(isListening){
+    stopMic();
+  } else {
+    startMic();
+  }
+}
+
+function startMic(){
+  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = "en-US";
+
+  var micbtn = g("micbtn");
+  var inp = g("ci");
+
+  recognition.onstart = function(){
+    isListening = true;
+    micbtn.classList.add("listening");
+    micbtn.textContent = "🔴";
+    inp.placeholder = "Listening... speak now";
+  };
+
+  recognition.onresult = function(event){
+    var transcript = "";
+    for(var i = event.resultIndex; i < event.results.length; i++){
+      transcript += event.results[i][0].transcript;
+    }
+    inp.value = transcript;
+    ar(inp);
+  };
+
+  recognition.onend = function(){
+    isListening = false;
+    micbtn.classList.remove("listening");
+    micbtn.textContent = "🎤";
+    inp.placeholder = "Type your answer or press 🎤 to speak...";
+    // Auto-send if we got something
+    if(inp.value.trim().length > 0){
+      setTimeout(function(){ sendMsg(); }, 500);
+    }
+  };
+
+  recognition.onerror = function(event){
+    isListening = false;
+    micbtn.classList.remove("listening");
+    micbtn.textContent = "🎤";
+    if(event.error === "not-allowed"){
+      alert("Microphone access was blocked. Click the lock icon in your browser address bar and allow microphone access.");
+    }
+  };
+
+  recognition.start();
+}
+
+function stopMic(){
+  if(recognition){
+    recognition.stop();
+  }
+}
+
 </script>
 </body>
 </html>
