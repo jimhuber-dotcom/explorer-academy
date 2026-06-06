@@ -335,10 +335,14 @@ body{font-family:"DM Sans",sans-serif;background:var(--parchment);color:var(--in
     </div>
     <div class="cur fi">
       <div class="cur-av">🏛️</div>
-      <div>
+      <div style="flex:1;">
         <div class="cur-lbl">The Curator · Your History Guide</div>
         <div class="cur-msg" id="cmsg">Loading...</div>
         <div class="cur-unit" id="cunit"></div>
+      </div>
+      <div style="flex-shrink:0;margin-left:12px;">
+        <button id="wakeBtn" onclick="wakeServer()" style="padding:6px 14px;border-radius:7px;background:rgba(201,153,58,.15);border:1px solid rgba(201,153,58,.3);color:var(--gold);font-family:DM Sans,sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .3s;white-space:nowrap;">⚡ Wake Curator</button>
+        <div id="wakeStatus" style="font-size:8px;color:rgba(255,255,255,.3);text-align:center;margin-top:4px;"></div>
       </div>
     </div>
     <div class="mgrid">
@@ -887,6 +891,78 @@ function stopMic(){
     recognition.stop();
   }
 }
+
+
+// ── WAKE SERVER ──────────────────────────────────────────
+function wakeServer(){
+  var btn = g("wakeBtn");
+  var status = g("wakeStatus");
+  if(!btn) return;
+  btn.textContent = "⏳ Waking...";
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  if(status) status.textContent = "Pinging server...";
+
+  fetch(BACKEND+"/", {method:"GET"})
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.textContent = "✅ Ready!";
+    btn.style.background = "rgba(107,143,113,.2)";
+    btn.style.borderColor = "rgba(107,143,113,.4)";
+    btn.style.color = "#a8c5a0";
+    if(status) status.textContent = "The Curator is awake";
+    // Reset after 10 seconds
+    setTimeout(function(){
+      btn.textContent = "✅ Curator Ready";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }, 10000);
+  })
+  .catch(function(){
+    // Still waking up - try again in 5 seconds
+    if(status) status.textContent = "Still waking... (30 sec)";
+    setTimeout(function(){
+      fetch(BACKEND+"/", {method:"GET"})
+      .then(function(){ 
+        btn.textContent = "✅ Ready!";
+        btn.style.background = "rgba(107,143,113,.2)";
+        btn.style.borderColor = "rgba(107,143,113,.4)";
+        btn.style.color = "#a8c5a0";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        if(status) status.textContent = "The Curator is awake";
+      })
+      .catch(function(){
+        btn.textContent = "⚡ Wake Curator";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.background = "rgba(201,153,58,.15)";
+        btn.style.borderColor = "rgba(201,153,58,.3)";
+        btn.style.color = "var(--gold)";
+        if(status) status.textContent = "Try again in a moment";
+      });
+    }, 15000);
+  });
+
+  // Also auto-wake when page loads after a delay
+}
+
+// Auto-wake server 3 seconds after page loads
+setTimeout(function(){
+  fetch(BACKEND+"/", {method:"GET"})
+  .then(function(){
+    var btn = g("wakeBtn");
+    var status = g("wakeStatus");
+    if(btn){
+      btn.textContent = "✅ Curator Ready";
+      btn.style.background = "rgba(107,143,113,.2)";
+      btn.style.borderColor = "rgba(107,143,113,.4)";
+      btn.style.color = "#a8c5a0";
+    }
+    if(status) status.textContent = "The Curator is awake";
+  })
+  .catch(function(){}); // silently fail - server still waking
+}, 3000);
 
 </script>
 </body>
