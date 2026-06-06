@@ -609,11 +609,7 @@ function initChat(){
   var m=g("msgs");
   m.innerHTML="";
   history=[];
-  addMsg("curator","Good morning, Katherine. I have been waiting for you.
-
-Unit "+w.unit+" — "+w.unit_name+". Today is "+w.day_theme+".
-
-"+w.jqs[0]);
+  addMsg("curator","Good morning, Katherine. I have been waiting for you. Unit "+w.unit+" - "+w.unit_name+". Today is "+w.day_theme+". "+w.jqs[0]);
 }
 
 var MDES={
@@ -635,14 +631,8 @@ async function sendMsg(){
   try{
     var w=W(cw);
     var sys=MDES[mode](w);
-    var hist=history.map(function(m){return m.role+": "+m.content;}).join("
-");
-    var body=JSON.stringify({messages:[{role:"user",content:sys+"
-
-Conversation:
-"+hist+"
-
-Respond as The Curator:"}]});
+    var hist=history.map(function(m){return m.role+": "+m.content;}).join(" | ");
+    var body=JSON.stringify({messages:[{role:"user",content:sys+" Conversation: "+hist+" Respond as The Curator:"}]});
     var resp=await fetch(BACKEND+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:body});
     var data=await resp.json();
     hideT();
