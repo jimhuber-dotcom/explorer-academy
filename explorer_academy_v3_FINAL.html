@@ -677,7 +677,96 @@ function addMsg(role,txt){
 
 function showT(){var m=g("msgs");var d=document.createElement("div");d.className="msg curator";d.id="tind";d.innerHTML='<div class="mav">🏛️</div><div class="tind"><span></span><span></span><span></span></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function hideT(){var t=g("tind");if(t)t.remove();}
-function setMode(m,btn){mode=m;document.querySelectorAll(".mb").forEach(function(b){b.classList.remove("sel");});btn.classList.add("sel");var lines={discuss:"Open discussion. Ask me anything.",challenge:"Challenge mode on. Defend everything you say.",quiz:"Quiz mode. One question at a time.",writing:"Writing coach. Share something you wrote."};addMsg("curator",lines[m]);}
+function setMode(m,btn){
+  mode=m;
+  document.querySelectorAll(".mb").forEach(function(b){b.classList.remove("sel");});
+  btn.classList.add("sel");
+  var w=W(cw);
+  if(m==="discuss"){
+    addMsg("curator","Open discussion. Ask me anything about "+w.title+". I am listening.");
+  } else if(m==="challenge"){
+    addMsg("curator","Challenge mode. I will push back on everything you say about "+w.title+". Start with your biggest takeaway and defend it.");
+  } else if(m==="quiz"){
+    addMsg("curator","Quiz mode on. I will ask you one question at a time about "+w.title+". Answer in your own words - no multiple choice. Here is your first question: "+w.quiz[0].q);
+  } else if(m==="writing"){
+    var prompts=w.quiz;
+    var p=prompts[Math.floor(Math.random()*prompts.length)].q;
+    addMsg("curator","Writing Coach mode. Here is your prompt: "+p+" Write at least 100 words. Make a clear argument and support it with a specific example from what you learned. A writing box will appear below.");
+    setTimeout(function(){showWritingBox(p);},400);
+  }
+}
+
+function showWritingBox(prompt){
+  var msgs=g("msgs");
+  var existing=document.getElementById("writingBox");
+  if(existing)existing.remove();
+  var box=document.createElement("div");
+  box.id="writingBox";
+  box.style.cssText="margin:8px 0;padding:14px;background:rgba(255,255,255,.05);border:1px solid rgba(201,153,58,.3);border-radius:10px;";
+  var html="";
+  html+="<div style='display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;'>";
+  html+="<div style='font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);'>Your Paragraph</div>";
+  html+="<div style='font-size:10px;color:rgba(255,255,255,.4);' id='wcd'>0 / 100 words minimum</div>";
+  html+="</div>";
+  html+="<textarea id='wci' oninput='uwc()' style='width:100%;min-height:120px;padding:9px 11px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);font-family:Cormorant Garamond,serif;font-size:14px;color:#fff;line-height:1.6;resize:vertical;' placeholder='Write your paragraph here... minimum 100 words. Make a clear argument and support it with a specific example.'></textarea>";
+  html+="<div style='margin-top:5px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;'>";
+  html+="<div id='wcb' style='height:100%;width:0%;background:var(--gold);border-radius:2px;transition:width .3s;'></div></div>";
+  html+="<div style='font-size:9px;color:rgba(255,255,255,.35);margin-top:5px;font-style:italic;'>The Curator will review your argument, evidence, grammar, spelling, and vocabulary.</div>";
+  html+="<button id='wsb' onclick='submitWriting()' disabled style='margin-top:8px;width:100%;padding:9px;border-radius:7px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.1);font-family:DM Sans,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:not-allowed;transition:all .3s;'>Keep writing... (0/100 words)</button>";
+  box.innerHTML=html;
+  msgs.appendChild(box);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function uwc(){
+  var txt=document.getElementById("wci");
+  var btn=document.getElementById("wsb");
+  var display=document.getElementById("wcd");
+  var bar=document.getElementById("wcb");
+  if(!txt||!btn)return;
+  var words=txt.value.trim()===""?0:txt.value.trim().split(/\s+/).length;
+  var pct=Math.min((words/100)*100,100);
+  if(display)display.textContent=words+" / 100 words minimum";
+  if(bar){bar.style.width=pct+"%";bar.style.background=words>=100?"#6b8f71":words>60?"var(--gold)":"rgba(255,255,255,.3)";}
+  if(words>=100){
+    btn.disabled=false;
+    btn.style.background="var(--gold)";btn.style.color="var(--ink)";
+    btn.style.borderColor="var(--gold)";btn.style.cursor="pointer";
+    btn.textContent="Submit for Feedback →";
+  } else {
+    btn.disabled=true;
+    btn.style.background="rgba(255,255,255,.08)";btn.style.color="rgba(255,255,255,.3)";
+    btn.style.borderColor="rgba(255,255,255,.1)";btn.style.cursor="not-allowed";
+    btn.textContent="Keep writing... ("+words+"/100 words)";
+  }
+}
+
+function submitWriting(){
+  var txt=document.getElementById("wci");
+  if(!txt||!txt.value.trim())return;
+  var writing=txt.value.trim();
+  var box=document.getElementById("writingBox");
+  if(box)box.remove();
+  addMsg("user",writing);
+  var w=W(cw);
+  typing=true;g("sb2btn").disabled=true;
+  showT();
+  var sys="You are The Curator as writing coach for 15-year-old Katherine preparing for college. She submitted a paragraph on: "+w.title+". Give specific honest feedback on FOUR things: 1) ARGUMENT: Is her main point clear and defended? 2) EVIDENCE: Did she use a specific historical example? 3) GRAMMAR and SPELLING: Name any specific errors - do not just say check your grammar, point to the actual mistake. If there are none say so. 4) VOCABULARY: Suggest one stronger word and explain why it is more precise. End with one sentence of genuine encouragement. Keep total response under 150 words.";
+  fetch(BACKEND+"/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:sys+" Her paragraph: "+writing}]})})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    hideT();
+    var reply=(data.content&&data.content[0])?data.content[0].text:getFB();
+    history.push({role:"assistant",content:reply});
+    addMsg("curator",reply);
+    typing=false;g("sb2btn").disabled=false;
+  })
+  .catch(function(){
+    hideT();
+    addMsg("curator","Your paragraph shows real thinking. Make sure every sentence supports your main argument. Your opening claim is your strongest moment - build on it with a specific historical example.");
+    typing=false;g("sb2btn").disabled=false;
+  });
+}
 function hk(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}
 function ar(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,100)+"px";}
 
