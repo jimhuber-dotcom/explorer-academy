@@ -506,12 +506,62 @@ function loadW(n){
 function buildSteps(w){
   var vs = "https://www.youtube.com/embed/"+w.vid_id+"?rel=0";
   var pt = "You are The Curator, a warm and rigorous history guide for 15-year-old Katherine. Topic: "+w.title+". "+w.brief+" Ask thoughtful questions, push back on surface answers, connect to today. Under 4 sentences per response. End with a question.";
-  g("stps").innerHTML =
-    '<div class="step done" id="s1" onclick="ts(1)"><div class="sn">✓</div><div><div class="st">Watch — '+w.vid_title+'</div><div class="sd">'+w.topic+'</div><div class="stm">15 min · click to rewatch</div><div class="sexp"><div class="vlbl">Today's Video</div><div class="vw"><iframe src="'+vs+'" allowfullscreen loading="lazy"></iframe></div><div class="vbak"><a href="'+w.vid_backup+'" target="_blank">📚 Khan Academy backup →</a></div></div></div></div>'+
-    '<div class="step active" id="s2" onclick="ts(2)"><div class="sn">2</div><div><div class="st">Talk to The Curator</div><div class="sd">Live AI discussion</div><div class="stm">10-15 min</div><div class="sexp"><div class="pcpy"><div class="pctxt" id="dp1">'+pt+'</div><button class="cpb" onclick="event.stopPropagation();cp('dp1',this)">Copy</button></div><button class="abtn ag" onclick="event.stopPropagation();nav('pt',1)">🏛️ Open Live Chat</button><button class="abtn agh" style="margin-top:5px;" onclick="event.stopPropagation();md(2)">✓ Already discussed</button></div></div></div>'+
-    '<div class="step" id="s3" onclick="ts(3)"><div class="sn">3</div><div><div class="st">5-Question Quiz</div><div class="sd">Prove what you know</div><div class="stm">5 min</div><div class="sexp"><button class="abtn ag" onclick="event.stopPropagation();nav('pq',2)">Start the Quiz →</button></div></div></div>'+
-    '<div class="step" id="s4" onclick="ts(4)"><div class="sn">4</div><div><div class="st">Journal — 3 Questions</div><div class="sd">Write your reflections here</div><div class="stm">5-8 min</div><div class="sexp"><div class="jqs">'+w.jqs.map(function(q){return '<div class="jq">'+q+'</div>';}).join("")+'</div><textarea class="jta" id="jta" placeholder="Write your thoughts... no wrong answers."></textarea><button class="abtn ag" onclick="event.stopPropagation();svJ()">✓ Save Journal</button></div></div></div>'+
-    '<div class="step" id="s5" onclick="ts(5)"><div class="sn">5</div><div><div class="st">Friday Project</div><div class="sd">Choose the project that excites you</div><div class="stm">Friday</div><div class="sexp"><div class="pcards">'+w.projs.map(function(p,i){return '<div class="pcard" onclick="event.stopPropagation();sp(this)"><div class="pct">'+p.t+'</div><div class="pcd">'+p.d+'</div></div>';}).join("")+'</div><button class="abtn as" onclick="event.stopPropagation();md(5)" style="margin-top:8px;">✓ I chose my project</button></div></div></div>';
+  var h = "";
+  h += "<div class=\"step done\" id=\"s1\" onclick=\"ts(1)\">";
+  h += "<div class=\"sn\">&#10003;</div><div>";
+  h += "<div class=\"st\">Watch &mdash; "+w.vid_title+"</div>";
+  h += "<div class=\"sd\">"+w.topic+"</div>";
+  h += "<div class=\"stm\">15 min &middot; click to rewatch</div>";
+  h += "<div class=\"sexp\">";
+  h += "<div class=\"vlbl\">Today Video</div>";
+  h += "<div class=\"vw\"><iframe src=\""+vs+"\" allowfullscreen loading=\"lazy\"></iframe></div>";
+  h += "<div class=\"vbak\"><a href=\""+w.vid_backup+"\" target=\"_blank\">Khan Academy backup</a></div>";
+  h += "</div></div></div>";
+  h += "<div class=\"step active\" id=\"s2\" onclick=\"ts(2)\">";
+  h += "<div class=\"sn\">2</div><div>";
+  h += "<div class=\"st\">Talk to The Curator</div>";
+  h += "<div class=\"sd\">Live AI discussion</div>";
+  h += "<div class=\"stm\">10-15 min</div>";
+  h += "<div class=\"sexp\">";
+  h += "<div class=\"pcpy\"><div class=\"pctxt\" id=\"dp1\">"+pt+"</div>";
+  h += "<button class=\"cpb\" onclick=\"event.stopPropagation();cp('dp1',this)\">Copy</button></div>";
+  h += "<button class=\"abtn ag\" onclick=\"event.stopPropagation();nav('pt',1)\">Open Live Chat</button>";
+  h += "<button class=\"abtn agh\" style=\"margin-top:5px;\" onclick=\"event.stopPropagation();md(2)\">Already discussed</button>";
+  h += "</div></div></div>";
+  h += "<div class=\"step\" id=\"s3\" onclick=\"ts(3)\">";
+  h += "<div class=\"sn\">3</div><div>";
+  h += "<div class=\"st\">5-Question Quiz</div>";
+  h += "<div class=\"sd\">Prove what you know</div>";
+  h += "<div class=\"stm\">5 min</div>";
+  h += "<div class=\"sexp\"><button class=\"abtn ag\" onclick=\"event.stopPropagation();nav('pq',2)\">Start the Quiz</button></div>";
+  h += "</div></div>";
+  h += "<div class=\"step\" id=\"s4\" onclick=\"ts(4)\">";
+  h += "<div class=\"sn\">4</div><div>";
+  h += "<div class=\"st\">Journal 3 Questions</div>";
+  h += "<div class=\"sd\">Write your reflections here</div>";
+  h += "<div class=\"stm\">5-8 min</div>";
+  h += "<div class=\"sexp\">";
+  h += "<div class=\"jqs\">";
+  for(var i=0;i<w.jqs.length;i++){
+    h += "<div class=\"jq\">"+w.jqs[i]+"</div>";
+  }
+  h += "</div>";
+  h += "<textarea class=\"jta\" id=\"jta\" placeholder=\"Write your thoughts...\"></textarea>";
+  h += "<button class=\"abtn ag\" onclick=\"event.stopPropagation();svJ()\">Save Journal</button>";
+  h += "</div></div></div>";
+  h += "<div class=\"step\" id=\"s5\" onclick=\"ts(5)\">";
+  h += "<div class=\"sn\">5</div><div>";
+  h += "<div class=\"st\">Friday Project</div>";
+  h += "<div class=\"sd\">Choose the project that excites you</div>";
+  h += "<div class=\"stm\">Friday</div>";
+  h += "<div class=\"sexp\"><div class=\"pcards\">";
+  for(var j=0;j<w.projs.length;j++){
+    h += "<div class=\"pcard\" onclick=\"event.stopPropagation();sp(this)\"><div class=\"pct\">"+w.projs[j].t+"</div><div class=\"pcd\">"+w.projs[j].d+"</div></div>";
+  }
+  h += "</div>";
+  h += "<button class=\"abtn as\" onclick=\"event.stopPropagation();md(5)\" style=\"margin-top:8px;\">I chose my project</button>";
+  h += "</div></div></div>";
+  g("stps").innerHTML = h;
 }
 
 function sp(el){document.querySelectorAll(".pcard").forEach(function(c){c.classList.remove("sel");});el.classList.add("sel");}
