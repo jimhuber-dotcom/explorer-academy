@@ -824,46 +824,58 @@ function toggleMic(){
 function startMic(){
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = "en-US";
 
   var micbtn = g("micbtn");
   var inp = g("ci");
+  var finalTranscript = "";
 
   recognition.onstart = function(){
     isListening = true;
+    finalTranscript = "";
     micbtn.classList.add("listening");
     micbtn.textContent = "🔴";
-    inp.placeholder = "Listening... speak now";
+    micbtn.title = "Click to stop speaking";
+    inp.placeholder = "Listening... speak freely, click 🔴 when done";
   };
 
   recognition.onresult = function(event){
-    var transcript = "";
+    var interim = "";
     for(var i = event.resultIndex; i < event.results.length; i++){
-      transcript += event.results[i][0].transcript;
+      if(event.results[i].isFinal){
+        finalTranscript += event.results[i][0].transcript + " ";
+      } else {
+        interim += event.results[i][0].transcript;
+      }
     }
-    inp.value = transcript;
+    inp.value = finalTranscript + interim;
     ar(inp);
   };
 
   recognition.onend = function(){
-    isListening = false;
+    // If still supposed to be listening, restart (Chrome stops after ~60s)
+    if(isListening){
+      try { recognition.start(); } catch(e){ stopMic(); }
+      return;
+    }
     micbtn.classList.remove("listening");
     micbtn.textContent = "🎤";
+    micbtn.title = "Click to speak";
     inp.placeholder = "Type your answer or press 🎤 to speak...";
-    // Auto-send if we got something
     if(inp.value.trim().length > 0){
-      setTimeout(function(){ sendMsg(); }, 500);
+      setTimeout(function(){ sendMsg(); }, 300);
     }
   };
 
   recognition.onerror = function(event){
-    isListening = false;
-    micbtn.classList.remove("listening");
-    micbtn.textContent = "🎤";
+    if(event.error === "no-speech") return; // ignore no-speech, keep listening
     if(event.error === "not-allowed"){
-      alert("Microphone access was blocked. Click the lock icon in your browser address bar and allow microphone access.");
+      isListening = false;
+      micbtn.classList.remove("listening");
+      micbtn.textContent = "🎤";
+      alert("Microphone blocked. Click the lock icon in the address bar and allow microphone.");
     }
   };
 
