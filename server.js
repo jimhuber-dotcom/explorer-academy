@@ -2,15 +2,21 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// Health check — lets Render know the server is alive
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+app.options('*', cors());
+
 app.get('/', (req, res) => {
   res.json({ status: 'Explorer Academy API is running' });
 });
 
-// The one route the dashboard calls
 app.post('/chat', async (req, res) => {
   const { messages } = req.body;
 
@@ -44,11 +50,11 @@ app.post('/chat', async (req, res) => {
 
   } catch (err) {
     console.error('Server error:', err);
-    res.status(500).json({ error: 'Server error — check logs' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Explorer Academy API running on port ${PORT}`);
 });
