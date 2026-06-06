@@ -568,7 +568,12 @@ function sp(el){document.querySelectorAll(".pcard").forEach(function(c){c.classL
 
 function buildStamps(n){
   var earned = Math.min(n-1, STAMPS.length);
-  g("stamps").innerHTML = STAMPS.slice(0,6).map(function(s,i){return '<div class="stamp'+(i<earned?" on":"")+'""><div class="si">'+s+'</div><div class="sl">'+SLBLS[i]+'</div></div>';}).join("");
+  var sh="";
+  for(var si=0;si<6;si++){
+    var cls="stamp"+(si<earned?" on":"");
+    sh+="<div class=\""+cls+"\"><div class=\"si\">"+STAMPS[si]+"</div><div class=\"sl\">"+SLBLS[si]+"</div></div>";
+  }
+  g("stamps").innerHTML=sh;
   g("stampc").textContent = earned+" of 16 stamps earned";
 }
 
@@ -654,11 +659,13 @@ function addMsg(role,txt){
   var m=g("msgs"),isu=role==="user";
   var d=document.createElement("div");
   d.className="msg "+role;
-  var clean=txt.replace(/
-/g,"</p><p>").replace(/\*\*(.*?)\*\*/g,"<strong style='color:#fff'>$1</strong>");
-  d.innerHTML='<div class="mav">'+(isu?"K":"🏛️")+'</div><div class="mb2">'+(isu?"":"<div class='mlb'>The Curator</div>")+"<p>"+clean+"</p></div>";
+  var clean=txt.replace(/\n/g,"</p><p>");
+  var av=isu?"K":"&#127963;";
+  var lbl=isu?"":"<div class=\"mlb\">The Curator</div>";
+  d.innerHTML="<div class=\"mav\">"+av+"</div><div class=\"mb2\">"+lbl+"<p>"+clean+"</p></div>";
   m.appendChild(d);m.scrollTop=m.scrollHeight;
 }
+
 function showT(){var m=g("msgs");var d=document.createElement("div");d.className="msg curator";d.id="tind";d.innerHTML='<div class="mav">🏛️</div><div class="tind"><span></span><span></span><span></span></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function hideT(){var t=g("tind");if(t)t.remove();}
 function setMode(m,btn){mode=m;document.querySelectorAll(".mb").forEach(function(b){b.classList.remove("sel");});btn.classList.add("sel");var lines={discuss:"Open discussion. Ask me anything.",challenge:"Challenge mode on. Defend everything you say.",quiz:"Quiz mode. One question at a time.",writing:"Writing coach. Share something you wrote."};addMsg("curator",lines[m]);}
